@@ -3,29 +3,28 @@
   <v-list-item
       v-if="!editing"
       class="todo"
-      :class="task.done && 'done'"
-      @click="$emit('done')"
+      :class="{done: todo.done}"
+      @click="Done"
   >
     <template v-slot:title>
       <div class="todo__item">
-        <v-icon class="todo__logo" size="50">{{ icons.get(task.type) }}</v-icon>
+        <v-icon class="todo__logo" size="50">{{ icons[todo.type] }}</v-icon>
         <div class="todo__text">
-          <v-card-title>{{ task.title }}</v-card-title>
-          <v-card-subtitle>{{ task.descr }}</v-card-subtitle>
+          <v-card-title>{{ todo.title }}</v-card-title>
+          <v-card-subtitle>{{ todo.content }}</v-card-subtitle>
         </div>
       </div>
     </template>
-
     <template v-slot:append>
       <v-btn
           icon="mdi-close"
           variant="text"
-          @click="Delete"
+          @click.stop="Delete"
       ></v-btn>
       <v-btn
           icon="mdi-pencil"
           variant="text"
-          @click="toggleEditing"
+          @click.stop="toggleEditing"
       ></v-btn>
       <v-btn
           icon="mdi-check"
@@ -38,37 +37,23 @@
   <v-list-item
       v-else
       class="todo"
-      :class="task.done && 'done'"
+      :class="{done: todo.done}"
   >
     <template v-slot:title>
       <div class="todo__item">
-        <v-icon class="todo__logo" size="50">{{ icon }}</v-icon>
-        <v-responsive class="mx-auto" width="500">
-          <v-text-field class="input"
-                        label="Заголовок"
-                        hide-details="auto"
-                        v-model="form.title"
-          >
-          </v-text-field>
-          <v-text-field class="input subtitle"
-                        label="Описание"
-                        hide-details="auto"
-                        v-model="form.descr">
-          </v-text-field>
-        </v-responsive>
+        <TodoForm
+            :title="props.todo.title"
+            :content="props.todo.content"
+            :type="props.todo.type"
+            @send="(editingForm)=>Edit(editingForm)"
+        />
       </div>
     </template>
-
     <template v-slot:append>
       <v-btn
           icon="mdi-cancel"
           variant="text"
-          @click="toggleEditing"
-      ></v-btn>
-      <v-btn
-          icon="mdi-check"
-          variant="text"
-          @click="SendForm"
+          @click.stop="toggleEditing"
       ></v-btn>
     </template>
   </v-list-item>
@@ -76,16 +61,15 @@
 
 
 <script setup>
+import TodoForm from "./TodoForm.vue";
+
 const props = defineProps({
-  task: {
+  todo: {
     required: true,
     type: Object
   }
 })
-const form = ref({
-  title: props.task.title,
-  descr: props.task.descr
-})
+
 
 const setIcon = (type) => {
   switch (type) {
@@ -99,28 +83,30 @@ const setIcon = (type) => {
       return "mdi-calendar-month"
   }
 }
-const icons = new Map([
-  ["today", "mdi-fire-circle"],
-  ["week", "mdi-clock-time-eight"],
-  ["long", "mdi-calendar-month"]])
+const icons = {
+  "today": "mdi-fire-circle",
+  "week": "mdi-clock-time-eight",
+  "long": "mdi-calendar-month"
+}
 
 
-const icon = ref(setIcon(props.task.type))
+const icon = ref(setIcon(props.todo.type))
 const editing = ref(false)
-const emit = defineEmits(['edit','delete'])
+const emit = defineEmits(['edit', 'delete'])
 const toggleEditing = (event) => {
-  event.preventDefault()
   editing.value = !editing.value
+}
+const Edit = (form) => {
+  editing.value = !editing.value
+  emit('edit', {...form, id: props.todo.id})
+}
+const Done = () => {
+  emit('done',props.todo.id)
 }
 const Delete = () => {
-  event.preventDefault()
-  emit('delete')
+  emit('delete',props.todo.id)
 }
-const SendForm = () => {
-  event.preventDefault()
-  editing.value = !editing.value
-  emit('edit', form.value)
-}
+
 </script>
 
 <style scoped lang="scss">
@@ -156,6 +142,7 @@ const SendForm = () => {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
+  gap: 10px;
 }
 
 </style>

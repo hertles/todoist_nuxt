@@ -26,11 +26,13 @@
     </v-layout>
   </v-card>
 </template>
-<script >
 
+<script>
+export default {
+  name: "app"
+}
 </script>
+
 <style scoped>
-  .main{
-    width: 50%;
-  }
+
 </style>
