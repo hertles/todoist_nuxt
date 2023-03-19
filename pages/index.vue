@@ -9,7 +9,7 @@
         :items="filters"
         item-title="title"
         item-value="value"
-        @update:selected="(selectedFilter) => filterName = selectedFilter[0]"
+        @update:selected="(selectedFilter) => filterNumber = selectedFilter[0]"
     >
     </v-list>
     <v-text-field label="Поиск" v-model="searchString"/>
@@ -33,88 +33,68 @@
   </v-container>
 </template>
 <script setup>
-const todos = ref([
-  {
-    id: 0,
-    title: "Приготовить яичницу с хлебом",
-    content: "Щедро посыпать приправами и жарить, жарить",
-    type: "today",
-    done: false
-  },
-  {
-    id: 1,
-    title: "Написать тест по математике",
-    content: "Списать у одноклассника",
-    type: "today",
-    done: false
-  },
-  {
-    id: 2,
-    title: "Прогуляться по парку",
-    content: "Послушать птиц",
-    type: "week",
-    done: true
-  },
-  {
-    id: 3,
-    title: "Завершить проект",
-    content: "Отправить его заказчику",
-    type: "long",
-    done: false
-  },
-  {
-    id: 4,
-    title: "Выучить песню на гитаре",
-    content: "Потренировать баррэ",
-    type: "week",
-    done: true
-  },
-  {
-    id: 5,
-    title: "Прочитать книгу",
-    content: "Рэй Бредбери \"Вино из одуванчиков\"",
-    type: "week",
-    done: true
-  },
-  {
-    id: 6,
-    title: "Устроиться на работу",
-    content: "В маленькую уютную IT компанию",
-    type: "long",
-    done: false
-  },
-])
+import {useAsyncData} from "nuxt/app";
 
-const Done = (id) => {
-  todos.value.find(todo => todo.id === id).done = !todos.value.find(todo => todo.id === id).done
+let todos = await useAsyncData(`todo`, () => $fetch(`/api/todo/`, {
+  method: "GET",
+})).data
+const getTodos = async () => {
+  todos.value = await useAsyncData(`todo`, () => $fetch(`/api/todo/`, {
+    method: "GET",
+  })).data
 }
-const Delete = (id) => {
-  todos.value = todos.value.filter(thisTodo => thisTodo.id !== id)
+
+const Done = async (id) => {
+  await useAsyncData(`todo`, () => $fetch(`/api/todo/${id}/done`, {
+    method: "PUT",
+  }))
+  await getTodos()
+  //todos.value[todos.value.find(thisTodo=>thisTodo.id===id)]=updatedTodo
 }
-const Edit = (form) => {
-  const todo = todos.value.find(todo => todo.id === form.id)
-  todo.title = form.title
-  todo.content = form.content
-  todo.type = form.type.value
+const Delete = async (id) => {
+  await useAsyncData(`todo`, () => $fetch(`/api/todo/${id}`, {
+    method: "DELETE",
+  }))
+  await getTodos()
+}
+const Edit = async (form) => {
+  await useAsyncData(`todo`, () => $fetch(`/api/todo/${form.id}`, {
+    method: "PUT",
+    body: {
+      title: form.title,
+      content: form.content,
+      typeId: form.type.value
+    }
+  }))
+  await getTodos()
+}
+const AddTodo = async (form) => {
+  await useAsyncData(`todo`, () => $fetch(`/api/todo/`, {
+    method: "POST",
+    body: {
+      title: form.title,
+      content: form.content,
+      typeId: form.type.value
+    }
+  }))
+  await getTodos()
 }
 const filters = [
-  {title: "Текущие задачи", value: "today", props: {prependIcon: "mdi-fire-circle"}},
-  {title: "Задачи на неделю", value: "week", props: {prependIcon: "mdi-clock-time-eight"}},
-  {title: "Отложенные", value: "long", props: {prependIcon: "mdi-calendar-month"}}
+  {title: "Текущие задачи", value: 1, props: {prependIcon: "mdi-fire-circle"}},
+  {title: "Задачи на неделю", value: 2, props: {prependIcon: "mdi-clock-time-eight"}},
+  {title: "Отложенные", value: 3, props: {prependIcon: "mdi-calendar-month"}}
 ]
-const filterName = ref("")
+const filterNumber = ref(0)
 const searchString = ref("")
 const filteredTodos = computed(() => {
-  return filterName.value === "" || filterName.value === undefined
+  return filterNumber.value === 0 || filterNumber.value === undefined
       ? [...todos.value]
-      : todos.value.filter(todo => todo.type === filterName.value)
+      : todos.value.filter(todo => todo.typeId === filterNumber.value)
 })
 const filteredAndSearchedTodos = computed(() => {
   return filteredTodos.value.filter(todo => todo.title.includes(searchString.value))
 })
-const AddTodo = (form) => {
-  todos.value.push({...form, type: form.type.value, id: Date.now(), done: false})
-}
+
 </script>
 <style scoped>
 .main__todolist {
@@ -122,6 +102,7 @@ const AddTodo = (form) => {
   flex-direction: column;
   gap: 10px;
 }
+
 .todolist__divider {
   margin: 10px 0;
 }

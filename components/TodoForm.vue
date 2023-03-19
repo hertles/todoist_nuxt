@@ -41,20 +41,20 @@ const props = defineProps({
     type: String,
     default: ""
   },
-  type: {
-    type: String,
-    default: "today"
+  typeId: {
+    type: Number,
+    default: 1
   }
 })
 const types = [
-  {value: 'today', title: 'Текущая задача', icon: 'mdi-fire-circle'},
-  {value: 'week', title: 'Задача на неделю'},
-  {value: 'long', title: 'Отложенная задача'}
+  {value: 1, title: 'Текущая задача'},
+  {value: 2, title: 'Задача на неделю'},
+  {value: 3, title: 'Отложенная задача'}
 ]
 const form = ref({
   title: props.title,
   content: props.content,
-  type: types.find(t => t.value === props.type)
+  type: types.find(t => t.value === props.typeId)
 })
 const emit = defineEmits(['send'])
 const Send = () => {
