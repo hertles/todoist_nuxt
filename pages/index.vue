@@ -1,6 +1,5 @@
 <template>
   <v-navigation-drawer
-
       permanent
   >
     <v-card-title>Фильтры</v-card-title>
@@ -10,15 +9,18 @@
         :items="filters"
         item-title="title"
         item-value="value"
-        @update:selected="filterName"
+        @update:selected="(selectedFilter) => filterName = selectedFilter[0]"
     >
     </v-list>
     <v-text-field label="Поиск" v-model="searchString"/>
   </v-navigation-drawer>
   <v-container fluid>
-    <div class="main__tasklist">
+    <div class="main__todolist">
       <TodoForm
           @send="(addingForm)=>AddTodo(addingForm)"
+      />
+      <v-divider
+          class="todolist__divider"
       />
       <Todo
           v-for="todo in filteredAndSearchedTodos"
@@ -26,7 +28,7 @@
           :todo="todo"
           @done="(id)=>Done(id)"
           @delete="(id)=>Delete(id)"
-          @edit="(editingForm)=>Edit(editingForm)"/>
+          @edit="(editingForm) => Edit(editingForm)"/>
     </div>
   </v-container>
 </template>
@@ -101,13 +103,9 @@ const filters = [
   {title: "Отложенные", value: "long", props: {prependIcon: "mdi-calendar-month"}}
 ]
 const filterName = ref("")
-const setFilter = (type) => {
-  filterName.value = filterName.value === type ? "" : type
-}
 const searchString = ref("")
 const filteredTodos = computed(() => {
-
-  return filterName.value === ""
+  return filterName.value === "" || filterName.value === undefined
       ? [...todos.value]
       : todos.value.filter(todo => todo.type === filterName.value)
 })
@@ -115,19 +113,16 @@ const filteredAndSearchedTodos = computed(() => {
   return filteredTodos.value.filter(todo => todo.title.includes(searchString.value))
 })
 const AddTodo = (form) => {
-  todos.value.push({...form.value, type: form.value.type.value, id: Date.now(), done: false})
-  form.value.title = form.value.content = ""
+  todos.value.push({...form, type: form.type.value, id: Date.now(), done: false})
 }
-
 </script>
 <style scoped>
-.main__tasklist {
+.main__todolist {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
-.addTask {
-  margin-bottom: 20px;
+.todolist__divider {
+  margin: 10px 0;
 }
 </style>
