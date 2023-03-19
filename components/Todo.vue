@@ -10,7 +10,7 @@
         <v-icon
             class="todo__logo"
             size="50">
-          {{ icons[todo.type] }}
+          {{ icons[todo.typeId] }}
         </v-icon>
         <div class="todo__text">
           <v-card-title>{{ todo.title }}</v-card-title>
@@ -47,7 +47,7 @@
         <TodoForm
             :title="props.todo.title"
             :content="props.todo.content"
-            :type="props.todo.type"
+            :typeId="props.todo.typeId"
             @send="(editingForm)=>Edit(editingForm)"
         />
       </div>
@@ -65,17 +65,18 @@
 
 <script setup>
 import TodoForm from "./TodoForm.vue";
+
 const props = defineProps({
   todo: {
     required: true,
     type: Object
   }
 })
-const icons = {
-  "today": "mdi-fire-circle",
-  "week": "mdi-clock-time-eight",
-  "long": "mdi-calendar-month"
-}
+const icons = [
+  "",
+  "mdi-fire-circle",
+  "mdi-clock-time-eight",
+  "mdi-calendar-month"]
 const editing = ref(false)
 const emit = defineEmits(['edit', 'delete'])
 const toggleEditing = () => {
@@ -86,10 +87,10 @@ const Edit = (form) => {
   emit('edit', {...form, id: props.todo.id})
 }
 const Done = () => {
-  emit('done',props.todo.id)
+  emit('done', props.todo.id)
 }
 const Delete = () => {
-  emit('delete',props.todo.id)
+  emit('delete', props.todo.id)
 }
 </script>
 
@@ -102,20 +103,25 @@ const Delete = () => {
   border-radius: 10px;
   cursor: pointer;
   background-color: #fff;
+
   &.done {
     background-color: #eee;
     color: gray;
+
     & .todo__text {
       text-decoration: line-through;
     }
   }
+
   &:hover {
     filter: brightness(0.9);
   }
 }
+
 .todo__logo {
   margin: 10px 0 -3px 0;
 }
+
 .todo__item {
   display: flex;
   align-items: center;

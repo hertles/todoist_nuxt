@@ -1,3 +1,4 @@
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -10,8 +11,18 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-model Post {
-  id      Int    @id @default(autoincrement())
+model Todo {
+  id      Int     @id @default(autoincrement())
   title   String
   content String
+  type    Type   @relation(fields: [typeId], references: [id])
+  done    Boolean @default(false)
+  typeId  Int     @default(0)
 }
+
+model Type {
+  id   Int     @id @default(autoincrement())
+  name String? @default("today")
+  Todo Todo[]
+}
+
