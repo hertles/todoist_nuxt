@@ -16,30 +16,33 @@
   </v-navigation-drawer>
   <v-container fluid>
     <div class="main__todolist">
-      <TodoForm
-          @send="(addingForm)=>AddTodo(addingForm)"
-      />
-      <v-divider
-          class="todolist__divider"
-      />
-      <Todo
-          v-for="todo in filteredAndSearchedTodos"
-          :key="todo.id"
-          :todo="todo"
-          @done="(id)=>Done(id)"
-          @delete="(id)=>Delete(id)"
-          @edit="(editingForm) => Edit(editingForm)"/>
+
+        <TodoForm
+            @send="(addingForm)=>AddTodo(addingForm)"
+        />
+        <v-divider
+            class="todolist__divider"
+        />
+      <v-slide-y-transition group>
+        <Todo
+            v-for="todo in filteredAndSearchedTodos"
+            :key="todo.id"
+            :todo="todo"
+            @done="(id)=>Done(id)"
+            @delete="(id)=>Delete(id)"
+            @edit="(editingForm) => Edit(editingForm)"/>
+      </v-slide-y-transition>
     </div>
   </v-container>
 </template>
 <script setup>
 import {useAsyncData} from "nuxt/app";
 
-let todos = await useAsyncData(`todo`, () => $fetch(`/api/todo/`, {
+let todos = await useAsyncData(`todos`, () => $fetch(`/api/todo/`, {
   method: "GET",
 })).data
 const getTodos = async () => {
-  todos.value = await useAsyncData(`todo`, () => $fetch(`/api/todo/`, {
+  todos.value = await useAsyncData(`todos`, () => $fetch(`/api/todo/`, {
     method: "GET",
   })).data
 }
@@ -48,14 +51,13 @@ const Done = async (id) => {
   await useAsyncData(`todo`, () => $fetch(`/api/todo/${id}/done`, {
     method: "PUT",
   }))
-  await getTodos()
-  //todos.value[todos.value.find(thisTodo=>thisTodo.id===id)]=updatedTodo
+  refreshNuxtData('todos')
 }
 const Delete = async (id) => {
   await useAsyncData(`todo`, () => $fetch(`/api/todo/${id}`, {
     method: "DELETE",
   }))
-  await getTodos()
+  refreshNuxtData('todos')
 }
 const Edit = async (form) => {
   await useAsyncData(`todo`, () => $fetch(`/api/todo/${form.id}`, {
@@ -66,7 +68,7 @@ const Edit = async (form) => {
       typeId: form.type.value
     }
   }))
-  await getTodos()
+  refreshNuxtData('todos')
 }
 const AddTodo = async (form) => {
   await useAsyncData(`todo`, () => $fetch(`/api/todo/`, {
@@ -77,7 +79,7 @@ const AddTodo = async (form) => {
       typeId: form.type.value
     }
   }))
-  await getTodos()
+  refreshNuxtData('todos')
 }
 const filters = [
   {title: "Текущие задачи", value: 1, props: {prependIcon: "mdi-fire-circle"}},
